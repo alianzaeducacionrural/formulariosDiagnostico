@@ -10,6 +10,10 @@ const municipiosInstituciones = require("./data/municipiosInstituciones");
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
+app.get("/health", (req, res) => {
+  res.status(200).send("ok");
+});
+
 /* =====================================================
    TEST CONEXIÓN BD
 ===================================================== */
@@ -97,6 +101,9 @@ function renderFormulario(res, titulo, descripcionHTML, estrategias, action) {
     <meta charset="UTF-8">
     <title>${titulo}</title>
     <link rel="stylesheet" href="/styles-formularios.css">
+    <script>
+      fetch("/health").catch(() => {});
+    </script>
   </head>
   <body>
 
@@ -279,11 +286,21 @@ function renderFormulario(res, titulo, descripcionHTML, estrategias, action) {
       }, 200);
     }
 
-    function confirmarEnvio() {
+    async function confirmarEnvio() {
       document.getElementById("modalConfirmacion").style.display = "none";
       document.getElementById("loadingOverlay").style.display = "flex";
-      form.submit();
+
+      try {
+        await fetch("/health");
+        setTimeout(() => {
+          form.submit();
+        }, 2000);
+      } catch (e) {
+        alert("El servidor se está iniciando, intenta nuevamente en unos segundos.");
+        document.getElementById("loadingOverlay").style.display = "none";
+      }
     }
+
   </script>
 
   <div id="loadingOverlay" class="loading-overlay">
@@ -470,6 +487,8 @@ app.get("/gracias", (req, res) => {
 app.get("/admin", async (req, res) => {
 
   const resumen = {};
+  await pool.query("SELECT 1");
+
 
   // Recorremos el catálogo de formularios
   for (const formulario of Object.keys(catalogoFormularios)) {
