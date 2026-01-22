@@ -424,14 +424,6 @@ async function guardarFormulario(req, res, nombreFormulario) {
     /* ===============================
        TRANSACCIÓN
     =============================== */
-    console.log("📥 Formulario recibido:", {
-      formulario: nombreFormulario,
-      municipio: req.body.municipio,
-      institucion: req.body.institucion,
-      totalEstrategias: estrategias.length
-    });
-
-
     await client.query("BEGIN");
 
     /* ===============================
