@@ -9,6 +9,7 @@ const municipiosInstituciones = require("./data/municipiosInstituciones");
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
+app.use(express.json());
 
 app.get("/health", (req, res) => {
   res.status(200).send("ok");
@@ -401,20 +402,64 @@ async function guardarFormulario(req, res, nombreFormulario) {
   const client = await pool.connect();
 
   try {
+    /* ===============================
+       VALIDACIÓN BÁSICA
+    =============================== */
+    if (!req.body || !req.body.estrategias) {
+      throw new Error("No llegaron estrategias en el formulario");
+    }
+
+    const estrategias = Array.isArray(req.body.estrategias)
+      ? req.body.estrategias
+      : Object.values(req.body.estrategias);
+
+    /* 🔎 LOG CLAVE (AQUÍ VA) */
+    console.log("📥 Formulario recibido:", {
+      formulario: nombreFormulario,
+      municipio: req.body.municipio,
+      institucion: req.body.institucion,
+      totalEstrategias: estrategias.length
+    });
+
+    /* ===============================
+       TRANSACCIÓN
+    =============================== */
+    console.log("📥 Formulario recibido:", {
+      formulario: nombreFormulario,
+      municipio: req.body.municipio,
+      institucion: req.body.institucion,
+      totalEstrategias: estrategias.length
+    });
+
+
     await client.query("BEGIN");
 
+    /* ===============================
+       1️⃣ INSERTAR RESPUESTA BASE
+    =============================== */
     const r = await client.query(`
-      INSERT INTO respuestas(formulario,nombre,municipio,institucion)
-      VALUES ($1,$2,$3,$4) RETURNING id
-    `, [nombreFormulario, req.body.nombre, req.body.municipio, req.body.institucion]);
+      INSERT INTO respuestas(formulario, nombre, municipio, institucion)
+      VALUES ($1, $2, $3, $4)
+      RETURNING id
+    `, [
+      nombreFormulario,
+      req.body.nombre,
+      req.body.municipio,
+      req.body.institucion
+    ]);
 
-    for (const e of req.body.estrategias) {
+    const respuestaId = r.rows[0].id;
+
+    /* ===============================
+       2️⃣ INSERTAR ESTRATEGIAS
+    =============================== */
+    for (const e of estrategias) {
       await client.query(`
         INSERT INTO estrategias_respuesta
-        (respuesta_id,nombre_estrategia,tipo,estado,valor,observaciones)
-        VALUES ($1,$2,$3,$4,$5,$6)
+        (respuesta_id, nombre_estrategia, tipo, estado, valor, observaciones)
+        VALUES ($1, $2, $3, $4, $5, $6)
       `, [
-        r.rows[0].id,
+        respuestaId,
         e.nombre,
         e.tipo,
         e.estado || null,
@@ -428,8 +473,8 @@ async function guardarFormulario(req, res, nombreFormulario) {
 
   } catch (err) {
     await client.query("ROLLBACK");
-    console.error(err);
-    res.status(500).send("Error guardando");
+    console.error("❌ Error guardando formulario:", err);
+    res.status(500).send("Error guardando el formulario");
   } finally {
     client.release();
   }
