@@ -37,9 +37,9 @@ const catalogoFormularios = {
 ===================================================== */
 const estrategiasEscuelaNueva = [
   "Operatividad del Gobierno Estudiantil",
-  "Uso de guías de interaprendizaje",
-  "Actividades de conjunto",
-  "Instrumentos de gobierno estudiantil",
+  "Uso de guías de interaprendizaje con Escuela Nueva",
+  "Realización de actividades de conjunto",
+  "Manejo de instrumentos de gobierno estudiantil",
   "Ambientación de aulas",
   "Docentes en Microcentro",
   "Hora de Gestión de Negocios",
