@@ -26,10 +26,10 @@ pool.query("SELECT NOW()")
    CATÁLOGO DE FORMULARIOS
 ===================================================== */
 const catalogoFormularios = {
-  "Modelo Escuela Nueva": "Modelo Escuela Nueva",
-  "Proyectos Pedagógicos Productivos (PPP)": "PPP",
-  "Escuela Virtual": "Escuela Virtual",
-  "Emprendimiento": "Emprendimiento"
+  escuela_nueva: "Modelo Escuela Nueva",
+  ppp: "Proyectos Pedagógicos Productivos (PPP)",
+  escuela_virtual: "Escuela Virtual",
+  emprendimiento: "Emprendimiento"
 };
 
 /* =====================================================
@@ -41,7 +41,7 @@ const estrategiasEscuelaNueva = [
   "Realización de actividades de conjunto",
   "Manejo de instrumentos de gobierno estudiantil",
   "Ambientación de aulas",
-  "Docentes en Microcentro",
+  "Organización de los docentes en Microcentro",
   "Hora de Gestión de Negocios",
   "Trabajo en equipo"
 ];
@@ -472,10 +472,10 @@ async function guardarFormulario(req, res, nombreFormulario) {
   }
 }
 
-app.post("/enviar/escuela-nueva", (r, s) => guardarFormulario(r, s, "Modelo Escuela Nueva"));
-app.post("/enviar/ppp", (r, s) => guardarFormulario(r, s, "Proyectos Pedagógicos Productivos (PPP)"));
-app.post("/enviar/escuela-virtual", (r, s) => guardarFormulario(r, s, "Escuela Virtual"));
-app.post("/enviar/emprendimiento", (r, s) => guardarFormulario(r, s, "Emprendimiento"));
+app.post("/enviar/escuela-nueva", (r, s) => guardarFormulario(r, s, "escuela_nueva"));
+app.post("/enviar/ppp", (r, s) => guardarFormulario(r, s, "ppp"));
+app.post("/enviar/escuela-virtual", (r, s) => guardarFormulario(r, s, "escuela_virtual"));
+app.post("/enviar/emprendimiento", (r, s) => guardarFormulario(r, s, "emprendimiento"));
 
 /* =====================================================
    PÁGINA GRACIAS
@@ -567,7 +567,7 @@ app.get("/admin", async (req, res) => {
 
       return `
         <a class="admin-card"
-           href="/admin/formulario/${encodeURIComponent(f)}">
+          href="/admin/formulario/${encodeURIComponent(f)}">
 
           <h3 class="admin-card-title">
             ${catalogoFormularios[f]}
