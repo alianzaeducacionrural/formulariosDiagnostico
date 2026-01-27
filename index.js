@@ -455,7 +455,13 @@ async function guardarFormulario(req, res, nombreFormulario) {
         e.nombre,
         e.tipo,
         e.estado || null,
-        e.valor || null,
+        e.tipo === "numero"
+          ? (
+              e.valor !== undefined && e.valor !== null && e.valor !== ""
+                ? parseInt(e.valor, 10)
+                : null
+            )
+          : null,
         e.observaciones
       ]);
     }
