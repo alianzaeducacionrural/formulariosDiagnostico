@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Formulario Diagnóstico</title>
+  <link rel="stylesheet" href="css/forms.css">
+</head>
+<body>
+<main class="container">
+  <section class="card form-card">
+    <h1 id="form-title">Cargando…</h1>
+    <div id="form-description" class="form-description"></div>
+
+    <form id="formPrincipal" method="POST">
+      <input type="hidden" id="form-action" value="">
+
+      <label>Nombre</label>
+      <input type="text" name="nombre" required>
+
+      <label>Municipio</label>
+      <select name="municipio" id="municipio" required>
+        <option value="" disabled selected>Seleccione municipio</option>
+      </select>
+
+      <label>Institución</label>
+      <select name="institucion" id="institucion" required>
+        <option value="" disabled selected>Seleccione municipio primero</option>
+      </select>
+
+      <h3>Estrategias</h3>
+      <div class="estrategias" id="estrategias-container"></div>
+
+      <div class="form-actions">
+        <button type="button" onclick="abrirModal()">Enviar</button>
+      </div>
+    </form>
+  </section>
+</main>
+
+<div id="modalConfirmacion" class="modal">
+  <div class="modal-box">
+    <h3>Confirmar envío</h3>
+    <div class="resumen">
+      <div class="resumen-item">
+        <span class="label">Municipio</span>
+        <span id="resumenMunicipio" class="valor"></span>
+      </div>
+      <div class="resumen-item">
+        <span class="label">Institución Educativa</span>
+        <span id="resumenInstitucion" class="valor"></span>
+      </div>
+    </div>
+    <p class="nota">Una vez enviada la información no podrá ser modificada.</p>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn-primary" onclick="confirmarEnvio()">Sí, enviar</button>
+    </div>
+  </div>
+</div>
+
+<div id="loadingOverlay" class="loading-overlay">
+  <div class="loader-box">
+    <div class="spinner"></div>
+    <p>Enviando formulario…</p>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/formulario.js"></script>
+</body>
+</html>

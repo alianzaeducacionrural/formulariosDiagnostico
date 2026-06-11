@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title id="page-title">Dashboard</title>
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+<main class="container">
+  <section class="card">
+    <header class="admin-header">
+      <div>
+        <h2 id="admin-title">Cargando…</h2>
+        <p class="subtitle">Panel de análisis para la toma de decisiones pedagógicas</p>
+      </div>
+    </header>
+
+    <section class="dashboard-executive">
+      <div class="kpi neutral">
+        <span class="kpi-label">Respuestas enviadas</span>
+        <span class="kpi-value" id="kpi-total">0</span>
+      </div>
+      <div class="kpi verde">
+        <span class="kpi-label">Aplicación adecuada</span>
+        <span class="kpi-value" id="kpi-verde">0%</span>
+        <span class="kpi-meta" id="kpi-verde-meta">0 instituciones</span>
+      </div>
+      <div class="kpi amarillo">
+        <span class="kpi-label">Aplicación con oportunidad de mejora</span>
+        <span class="kpi-value" id="kpi-amarillo">0%</span>
+        <span class="kpi-meta" id="kpi-amarillo-meta">0 instituciones</span>
+      </div>
+      <div class="kpi rojo">
+        <span class="kpi-label">No aplica</span>
+        <span class="kpi-value" id="kpi-rojo">0%</span>
+        <span class="kpi-meta" id="kpi-rojo-meta">0 instituciones</span>
+      </div>
+    </section>
+  </section>
+
+  <section class="card">
+    <header>
+      <h3>🧠 Insights automáticos</h3>
+      <p class="subtitle">Análisis generado automáticamente a partir de los resultados</p>
+    </header>
+    <div class="insights-list" id="insights-container"></div>
+  </section>
+
+  <section class="card">
+    <header>
+      <h3>🔥 Instituciones con mayor nivel de riesgo</h3>
+      <p class="subtitle">Ranking calculado automáticamente según el cumplimiento de estrategias</p>
+    </header>
+    <table class="ranking-table">
+      <thead>
+        <tr><th>#</th><th>Institución</th><th>Municipio</th><th>% Aplicación</th><th>Semáforo</th></tr>
+      </thead>
+      <tbody id="ranking-body"></tbody>
+    </table>
+  </section>
+
+  <details class="accordion">
+    <summary>📊 Estado de las estrategias</summary>
+    <section class="card">
+      <div class="estrategias-dashboard" id="estrategias-summary"></div>
+    </section>
+  </details>
+
+  <details class="accordion">
+    <summary>📍 Estado por municipio</summary>
+    <section class="card">
+      <div class="municipios-dashboard" id="municipios-summary"></div>
+    </section>
+  </details>
+
+  <section class="card">
+    <header class="section-header">
+      <h3>📋 Detalle de respuestas por institución</h3>
+      <p class="section-subtitle">Registro individual de cada respuesta enviada</p>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+        <a id="export-link" href="#" class="btn-primary" title="Descargar desde Google Sheets directamente">⬇ Descargar Excel</a>
+      </div>
+    </header>
+    <table>
+      <thead>
+        <tr><th>Municipio</th><th>Institución</th><th>Estado</th><th>Detalle</th></tr>
+      </thead>
+      <tbody id="detalle-body"></tbody>
+    </table>
+  </section>
+
+  <a href="admin.html">⬅ Volver al panel</a>
+</main>
+
+<div id="detalle-modal" class="modal">
+  <div class="modal-box">
+    <h3>📄 Detalle de la respuesta</h3>
+    <div id="detalle-contenido"><p>Cargando información…</p></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="cerrarDetalle()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/admin.js"></script>
+<script>document.addEventListener("DOMContentLoaded", initFormAdmin);</script>
+</body>
+</html>

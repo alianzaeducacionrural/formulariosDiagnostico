@@ -1,0 +1,314 @@
+/* =====================================================
+   RESET + BASE
+===================================================== */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+  background: #f4f6f9;
+  color: #2c3e50;
+}
+
+a {
+  color: #2c7be5;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+/* =====================================================
+   LAYOUT
+===================================================== */
+.container {
+  max-width: 900px;
+  margin: auto;
+  padding: 20px;
+}
+
+.form-card {
+  max-width: 900px;
+  margin: auto;
+}
+
+/* =====================================================
+   CARDS
+===================================================== */
+.card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 28px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+  margin-bottom: 24px;
+}
+
+/* =====================================================
+   TITULOS Y TEXTO
+===================================================== */
+h1 {
+  text-align: center;
+  font-size: 1.9rem;
+  margin-bottom: 12px;
+}
+
+h2 {
+  font-size: 1.5rem;
+  margin-bottom: 16px;
+}
+
+h3 {
+  margin-top: 30px;
+  margin-bottom: 12px;
+  font-size: 1.3rem;
+}
+
+p {
+  line-height: 1.6;
+  color: #555;
+}
+
+/* =====================================================
+   DESCRIPCIÓN DEL FORMULARIO
+===================================================== */
+.form-description {
+  margin-bottom: 20px;
+  padding: 14px 16px;
+  background: #f8fafc;
+  border-left: 4px solid #2c7be5;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #444;
+}
+
+/* =====================================================
+   FORMULARIOS
+===================================================== */
+label {
+  display: block;
+  font-weight: 600;
+  margin-top: 14px;
+}
+
+input[type="text"],
+input[type="number"],
+select {
+  width: 100%;
+  padding: 12px;
+  margin-top: 6px;
+  border-radius: 10px;
+  border: 1px solid #d0d5dd;
+  font-size: 14px;
+  background: #fff;
+}
+
+textarea {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid #d0d5dd;
+  padding: 10px 12px;
+  font-size: 13px;
+  min-height: 70px;
+  resize: vertical;
+  background: #fff;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: #2c7be5;
+  box-shadow: 0 0 0 3px rgba(44,123,229,0.15);
+}
+
+/* =====================================================
+   ESTRATEGIAS
+===================================================== */
+.estrategias {
+  display: grid;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.estrategia {
+  background: #ffffff;
+  border: 1px solid #e4e7ec;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.04);
+}
+
+/* =====================================================
+   HEADER DE ESTRATEGIA (RESALTADO)
+===================================================== */
+.estrategia-header {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: #1f2937;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e5e7eb;
+  letter-spacing: 0.2px;
+}
+
+/* =====================================================
+   TOGGLES APLICA / NO APLICA
+===================================================== */
+.toggle-group {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.toggle-group input {
+  display: none;
+}
+
+.toggle {
+  flex: 1;
+  text-align: center;
+  padding: 11px 16px;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 2px solid #d0d5dd;
+  background: #ffffff;
+  color: #374151;
+  transition: all 0.15s ease;
+}
+
+/* Estado hover */
+.toggle:hover {
+  background: #f8fafc;
+}
+
+/* Aplica seleccionado */
+.toggle-group input:checked + .toggle-aplica {
+  background: #28a745;
+  border-color: #28a745;
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(40,167,69,0.35);
+}
+
+/* No aplica seleccionado */
+.toggle-group input:checked + .toggle-noaplica {
+  background: #dc3545;
+  border-color: #dc3545;
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(220,53,69,0.35);
+}
+
+/* =====================================================
+   BOTÓN ENVIAR
+===================================================== */
+.form-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 36px;
+}
+
+button {
+  background: linear-gradient(135deg, #2c7be5, #1b5fcc);
+  color: #fff;
+  border: none;
+  padding: 14px 30px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(44,123,229,0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px rgba(44,123,229,0.45);
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+/* =====================================================
+   MODAL CONFIRMACIÓN + LOADING
+===================================================== */
+.modal,
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: rgba(0,0,0,0.45);
+}
+
+.modal-box {
+  background: #fff;
+  padding: 30px;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 420px;
+  text-align: center;
+}
+
+.loading-overlay {
+  background: rgba(255,255,255,0.85);
+}
+
+.spinner {
+  width: 46px;
+  height: 46px;
+  border: 4px solid #e0e0e0;
+  border-top-color: #2c7be5;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* =====================================================
+   PÁGINA GRACIAS
+===================================================== */
+.success-card {
+  text-align: center;
+  padding: 50px 30px;
+}
+
+.icon-success {
+  font-size: 64px;
+  color: #28a745;
+}
+
+.success-actions {
+  margin-top: 32px;
+  display: flex;
+  justify-content: center;
+}
+
+.success-actions .btn-primary {
+  background: linear-gradient(135deg, #28a745, #218838);
+  color: #fff;
+  padding: 14px 36px;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 600;
+  box-shadow: 0 10px 26px rgba(40,167,69,0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.success-actions .btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 34px rgba(40,167,69,0.5);
+}

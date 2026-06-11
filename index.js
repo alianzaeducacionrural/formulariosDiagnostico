@@ -4,7 +4,7 @@ const express = require("express");
 const ExcelJS = require("exceljs");
 const app = express();
 
-const pool = require("./db");
+const pool = require("./data/localPool");
 const municipiosInstituciones = require("./data/municipiosInstituciones");
 
 app.use(express.urlencoded({ extended: true }));
