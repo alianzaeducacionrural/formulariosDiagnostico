@@ -6,6 +6,10 @@ async function getConfig() {
   var res = await fetch(GAS_URL + "?action=getConfig");
   var json = await res.json();
   configCache = json.data;
+  // Mezcla definiciones locales de respaldo (config.js)
+  if (typeof aplicarFormDefsLocales === "function") {
+    configCache = aplicarFormDefsLocales(configCache);
+  }
   return configCache;
 }
 
@@ -14,61 +18,90 @@ function getFormSlug() {
   return params.get("tipo") || "escuela_nueva";
 }
 
+function mostrarLoaderPagina(visible) {
+  var el = document.getElementById("pageLoader");
+  if (el) el.style.display = visible ? "flex" : "none";
+}
+
+function escapeHtml(str) {
+  return String(str || "")
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
 // ── Render form ──────────────────────────────────────────
 async function initForm() {
-  var config = await getConfig();
-  var slug = getFormSlug();
-  var form = config.forms[slug];
-  if (!form) { document.body.innerHTML = "<p>Formulario no encontrado</p>"; return; }
+  mostrarLoaderPagina(true);
+  try {
+    var config = await getConfig();
+    var slug = getFormSlug();
+    var form = config.forms[slug];
+    if (!form) { document.body.innerHTML = "<p>Formulario no encontrado</p>"; return; }
 
-  document.getElementById("form-title").textContent = form.title;
-  document.getElementById("form-description").innerHTML = form.description;
-  document.getElementById("form-action").value = slug;
+    document.getElementById("form-title").textContent = form.title;
+    document.getElementById("form-description").innerHTML = form.description;
+    document.getElementById("form-action").value = slug;
 
-  // Municipios
+    // Cargo (opcional)
+    renderCargo(form);
+
+    // Ubicación: texto libre o selects de municipio/institución
+    renderUbicacion(form, config);
+
+    // Estrategias
+    renderEstrategias(form);
+
+    // Recomendaciones (opcional)
+    renderRecomendaciones(form);
+  } finally {
+    mostrarLoaderPagina(false);
+  }
+}
+
+function renderCargo(form) {
+  var cont = document.getElementById("cargo-container");
+  if (!form.pideCargo) { cont.innerHTML = ""; return; }
+  cont.innerHTML = `
+    <label>Cargo</label>
+    <select name="cargo" id="cargo" required>
+      <option value="" disabled selected>Seleccione su cargo</option>
+      <option value="Directivo">Directivo</option>
+      <option value="Docente">Docente</option>
+    </select>
+  `;
+}
+
+function renderUbicacion(form, config) {
+  var cont = document.getElementById("ubicacion-container");
+
+  if (form.libreUbicacion) {
+    cont.innerHTML = `
+      <label>Municipio</label>
+      <input type="text" name="municipio" id="municipio" placeholder="Escriba el municipio" required>
+      <label>Institución educativa</label>
+      <input type="text" name="institucion" id="institucion" placeholder="Escriba la institución educativa" required>
+    `;
+    return;
+  }
+
+  cont.innerHTML = `
+    <label>Municipio</label>
+    <select name="municipio" id="municipio" required>
+      <option value="" disabled selected>Seleccione municipio</option>
+    </select>
+    <label>Institución</label>
+    <select name="institucion" id="institucion" required>
+      <option value="" disabled selected>Seleccione municipio primero</option>
+    </select>
+  `;
+
   var selMuni = document.getElementById("municipio");
-  Object.keys(config.municipios).sort().forEach(function(m) {
+  Object.keys(config.municipios || {}).sort().forEach(function(m) {
     var opt = document.createElement("option");
     opt.value = m; opt.textContent = m;
     selMuni.appendChild(opt);
   });
 
-  // Estrategias
-  var container = document.getElementById("estrategias-container");
-  container.innerHTML = "";
-  form.strategies.forEach(function(est, i) {
-    var fieldset = document.createElement("fieldset");
-    fieldset.className = "estrategia";
-
-    if (est.tipo === "numero") {
-      fieldset.innerHTML = `
-        <legend>${est.nombre}</legend>
-        <input type="number" name="estrategias[${i}][valor]" min="0" required
-               data-nombre="${est.nombre}" data-tipo="numero" class="estr-input">
-        <textarea name="estrategias[${i}][observaciones]" class="estr-obs"
-                  placeholder="Observaciones" required
-                  data-nombre="${est.nombre}" data-tipo="numero"></textarea>
-      `;
-    } else {
-      fieldset.innerHTML = `
-        <div class="estrategia-header">${est.nombre}</div>
-        <div class="toggle-group">
-          <input type="radio" id="aplica-${i}" name="estado-${i}" value="Aplica" required
-                 data-nombre="${est.nombre}" data-tipo="aplica" class="estr-radio">
-          <label for="aplica-${i}" class="toggle toggle-aplica">✔ Aplica</label>
-          <input type="radio" id="noaplica-${i}" name="estado-${i}" value="No aplica"
-                 data-nombre="${est.nombre}" data-tipo="aplica" class="estr-radio">
-          <label for="noaplica-${i}" class="toggle toggle-noaplica">✖ No aplica</label>
-        </div>
-        <textarea name="estrategias[${i}][observaciones]"
-                  placeholder="Observaciones (obligatorio)" required
-                  data-nombre="${est.nombre}" data-tipo="aplica" class="estr-obs"></textarea>
-      `;
-    }
-    container.appendChild(fieldset);
-  });
-
-  // Institución dinámica
   selMuni.addEventListener("change", function() {
     var selInst = document.getElementById("institucion");
     selInst.innerHTML = "<option value='' disabled selected>Seleccione institución</option>";
@@ -78,6 +111,54 @@ async function initForm() {
       selInst.appendChild(opt);
     });
   });
+}
+
+function renderEstrategias(form) {
+  var container = document.getElementById("estrategias-container");
+  container.innerHTML = "";
+  (form.strategies || []).forEach(function(est, i) {
+    var fieldset = document.createElement("fieldset");
+    fieldset.className = "estrategia";
+
+    if (est.tipo === "numero") {
+      fieldset.innerHTML = `
+        <legend>${escapeHtml(est.nombre)}</legend>
+        <input type="number" name="estrategias[${i}][valor]" min="0" required
+               data-nombre="${escapeHtml(est.nombre)}" data-tipo="numero" class="estr-input">
+        <textarea name="estrategias[${i}][observaciones]" class="estr-obs"
+                  placeholder="Observaciones" required
+                  data-nombre="${escapeHtml(est.nombre)}" data-tipo="numero"></textarea>
+      `;
+    } else {
+      fieldset.innerHTML = `
+        <div class="estrategia-header">${escapeHtml(est.nombre)}</div>
+        <div class="toggle-group">
+          <input type="radio" id="aplica-${i}" name="estado-${i}" value="Aplica" required
+                 data-nombre="${escapeHtml(est.nombre)}" data-tipo="aplica" class="estr-radio">
+          <label for="aplica-${i}" class="toggle toggle-aplica">✔ Aplica</label>
+          <input type="radio" id="noaplica-${i}" name="estado-${i}" value="No aplica"
+                 data-nombre="${escapeHtml(est.nombre)}" data-tipo="aplica" class="estr-radio">
+          <label for="noaplica-${i}" class="toggle toggle-noaplica">✖ No aplica</label>
+        </div>
+        <textarea name="estrategias[${i}][observaciones]"
+                  placeholder="Observaciones (obligatorio)" required
+                  data-nombre="${escapeHtml(est.nombre)}" data-tipo="aplica" class="estr-obs"></textarea>
+      `;
+    }
+    container.appendChild(fieldset);
+  });
+}
+
+function renderRecomendaciones(form) {
+  var cont = document.getElementById("recomendaciones-container");
+  if (!form.pideRecomendaciones) { cont.innerHTML = ""; return; }
+  var label = form.recomendacionesLabel || "Recomendaciones";
+  cont.innerHTML = `
+    <h3>Recomendaciones</h3>
+    <label>${escapeHtml(label)}</label>
+    <textarea name="recomendaciones" id="recomendaciones"
+              placeholder="Escriba sus recomendaciones" required></textarea>
+  `;
 }
 
 // ── Confirmación y envío ────────────────────────────────
@@ -108,7 +189,7 @@ async function confirmarEnvio() {
   try {
     var form = document.getElementById("formPrincipal");
     var fd = new FormData(form);
-    var slug = fd.get("form");
+    var slug = fd.get("form") || document.getElementById("form-action").value;
     var estrategias = [];
     var seen = {};
 
@@ -150,8 +231,10 @@ async function confirmarEnvio() {
     var payload = {
       form: slug,
       nombre: fd.get("nombre"),
+      cargo: fd.get("cargo") || "",
       municipio: fd.get("municipio"),
       institucion: fd.get("institucion"),
+      recomendaciones: fd.get("recomendaciones") || "",
       estrategias: estrategias
     };
 

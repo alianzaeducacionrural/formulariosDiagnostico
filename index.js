@@ -322,7 +322,7 @@ function renderFormulario(res, titulo, descripcionHTML, estrategias, action) {
 app.get("/", (req, res) =>
   renderFormulario(
     res,
-    "¿Cómo estamos? ¿Cómo vamos?",
+    "Modelo Escuela Nueva",
     `
       <strong>Apreciado Rector(a)</strong>
       <p>

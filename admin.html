@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Panel Administrador</title>
-  <link rel="stylesheet" href="css/admin.css">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/admin.css?v=2">
 </head>
 <body>
 <main class="container">
@@ -14,8 +15,16 @@
     <div class="admin-grid" id="admin-grid"></div>
   </section>
 </main>
-<script src="js/config.js"></script>
-<script src="js/admin.js"></script>
+
+<div id="pageLoader" class="loading-overlay" style="display:flex">
+  <div class="loader-box">
+    <div class="spinner"></div>
+    <p>Cargando información…</p>
+  </div>
+</div>
+
+<script src="js/config.js?v=2"></script>
+<script src="js/admin.js?v=2"></script>
 <script>document.addEventListener("DOMContentLoaded", initAdmin);</script>
 </body>
 </html>

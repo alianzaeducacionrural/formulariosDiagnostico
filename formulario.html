@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Formulario Diagnóstico</title>
-  <link rel="stylesheet" href="css/forms.css">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/forms.css?v=2">
 </head>
 <body>
 <main class="container">
@@ -16,20 +17,15 @@
       <input type="hidden" id="form-action" value="">
 
       <label>Nombre</label>
-      <input type="text" name="nombre" required>
+      <input type="text" name="nombre" id="nombre" required>
 
-      <label>Municipio</label>
-      <select name="municipio" id="municipio" required>
-        <option value="" disabled selected>Seleccione municipio</option>
-      </select>
-
-      <label>Institución</label>
-      <select name="institucion" id="institucion" required>
-        <option value="" disabled selected>Seleccione municipio primero</option>
-      </select>
+      <div id="cargo-container"></div>
+      <div id="ubicacion-container"></div>
 
       <h3>Estrategias</h3>
       <div class="estrategias" id="estrategias-container"></div>
+
+      <div id="recomendaciones-container"></div>
 
       <div class="form-actions">
         <button type="button" onclick="abrirModal()">Enviar</button>
@@ -59,6 +55,7 @@
   </div>
 </div>
 
+<!-- Loader de envío -->
 <div id="loadingOverlay" class="loading-overlay">
   <div class="loader-box">
     <div class="spinner"></div>
@@ -66,7 +63,15 @@
   </div>
 </div>
 
-<script src="js/config.js"></script>
-<script src="js/formulario.js"></script>
+<!-- Loader de carga inicial (visible por defecto) -->
+<div id="pageLoader" class="loading-overlay" style="display:flex">
+  <div class="loader-box">
+    <div class="spinner"></div>
+    <p>Cargando información…</p>
+  </div>
+</div>
+
+<script src="js/config.js?v=2"></script>
+<script src="js/formulario.js?v=2"></script>
 </body>
 </html>

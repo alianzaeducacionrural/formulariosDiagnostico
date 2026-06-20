@@ -10,8 +10,23 @@ var SHEET_NAMES = {
   escuela_nueva:   "Escuela Nueva",
   ppp:             "PPP",
   escuela_virtual: "Escuela Virtual",
-  emprendimiento:  "Emprendimiento"
+  emprendimiento:  "Emprendimiento",
+  alianza_era:     "Alianza ERA"
 };
+
+// ── Estrategias de Alianza ERA (definidas en código) ───────
+var ALIANZA_ESTRATEGIAS = [
+  "Ambientación de las aulas",
+  "Hora de Gestión de Negocios",
+  "Manejo de instrumentos de gobierno estudiantil",
+  "Operatividad del Gobierno Estudiantil",
+  "Organización de los docentes en Microcentro",
+  "Realización de actividades de conjunto",
+  "Trabajo en equipo",
+  "Uso de guías de interaprendizaje con Escuela Nueva"
+];
+
+var RECOMENDACIONES_LABEL = "Recomendaciones para la alianza frente a la formación, asesoría y acompañamiento";
 
 // ── Catálogo de formularios (títulos, descripciones) ───────
 var FORM_CATALOG = {
@@ -34,6 +49,16 @@ var FORM_CATALOG = {
     title: "Emprendimiento",
     subtitle: "Emprendimiento",
     description: "<strong>Apreciado Rector(a) y/o docente líder</strong><p>Con el propósito de tomar decisiones pertinentes frente a las acciones de formación, asesoría y acompañamiento a desarrollar en las instituciones educativas que aplican la línea de Emprendimiento, le invitamos a diligenciar el siguiente formulario diagnóstico.</p>"
+  },
+  alianza_era: {
+    title: "Alianza ERA",
+    subtitle: "Alianza ERA",
+    description: "<strong>Apreciado Rector(a) o Docente</strong><p>Con el propósito de tomar decisiones pertinentes frente a las acciones de formación, asesoría y acompañamiento que desarrolla la Alianza ERA en las instituciones educativas, le invitamos a diligenciar el siguiente formulario diagnóstico.</p>",
+    libreUbicacion: true,
+    pideCargo: true,
+    pideRecomendaciones: true,
+    recomendacionesLabel: RECOMENDACIONES_LABEL,
+    strategies: ALIANZA_ESTRATEGIAS
   }
 };
 
@@ -97,6 +122,29 @@ function errorResponse(msg) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+// ── Metadata de columnas por formulario ────────────────────
+// Layout estándar:  [Municipio, Institución, Semáforo, est/obs...]
+// Layout alianza:   [Municipio, Institución, Semáforo, Nombre, Cargo, est/obs..., Recomendaciones]
+function getFormMeta(slug) {
+  if (slug === "alianza_era") {
+    return { estStart: 5, nombreCol: 3, cargoCol: 4 };
+  }
+  return { estStart: 3, nombreCol: -1, cargoCol: -1 };
+}
+
+// ── Estrategias del formulario ─────────────────────────────
+// Si el catálogo define strategies, se usan esas; si no, se leen
+// de los encabezados de la hoja.
+function getStrategies(slug, sheet) {
+  var cat = FORM_CATALOG[slug] || {};
+  if (cat.strategies) {
+    return cat.strategies.map(function(n) {
+      return { nombre: n, tipo: STRATEGY_TIPOS[n] || "aplica" };
+    });
+  }
+  return sheet ? leerEstrategiasDeHoja(sheet) : [];
+}
+
 // ── Leer headers y extraer estrategias de una hoja ─────────
 function leerEstrategiasDeHoja(sheet) {
   var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
@@ -114,36 +162,77 @@ function leerEstrategiasDeHoja(sheet) {
   return estrategias;
 }
 
-// ── Obtener sheet por slug ─────────────────────────────────
+// ── Obtener sheet por slug (crea Alianza ERA si falta) ──────
 function getSheet(slug) {
   var name = SHEET_NAMES[slug];
   if (!name) throw new Error("Formulario desconocido: " + slug);
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName(name);
-  if (!sheet) throw new Error("Hoja no encontrada: " + name);
+  if (!sheet) {
+    if (slug === "alianza_era") return crearHojaAlianza(ss);
+    throw new Error("Hoja no encontrada: " + name);
+  }
   return sheet;
+}
+
+// ── Encabezados de la hoja Alianza ERA ─────────────────────
+function encabezadosAlianza() {
+  var headers = ["Municipio", "Institución", "Semáforo", "Nombre", "Cargo"];
+  ALIANZA_ESTRATEGIAS.forEach(function(n) {
+    headers.push(n);
+    headers.push("Observaciones - " + n);
+  });
+  headers.push(RECOMENDACIONES_LABEL);
+  return headers;
+}
+
+// ── Escribir encabezados en una hoja (fila 1) ──────────────
+function escribirEncabezadosAlianza(sheet) {
+  var headers = encabezadosAlianza();
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  sheet.setFrozenRows(1);
+  return sheet;
+}
+
+// ── Crear hoja Alianza ERA con sus encabezados ─────────────
+function crearHojaAlianza(ss) {
+  var sheet = ss.insertSheet(SHEET_NAMES.alianza_era);
+  return escribirEncabezadosAlianza(sheet);
+}
+
+// ── Reparar/escribir encabezados en la hoja Alianza ERA ────
+// Ejecutar UNA vez desde el editor de Apps Script (botón Run)
+// si la hoja ya existía sin encabezados. No requiere redesplegar.
+function repararEncabezadosAlianza() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(SHEET_NAMES.alianza_era);
+  if (!sheet) sheet = ss.insertSheet(SHEET_NAMES.alianza_era);
+  escribirEncabezadosAlianza(sheet);
+  return "Encabezados de '" + SHEET_NAMES.alianza_era + "' actualizados.";
 }
 
 // ── GET /?action=getConfig ─────────────────────────────────
 function handleGetConfig() {
   var forms = {};
   for (var slug in SHEET_NAMES) {
+    var cat = FORM_CATALOG[slug] || {};
+    var strategies;
     try {
       var sheet = getSheet(slug);
-      forms[slug] = {
-        title: FORM_CATALOG[slug].title,
-        subtitle: FORM_CATALOG[slug].subtitle,
-        description: FORM_CATALOG[slug].description,
-        strategies: leerEstrategiasDeHoja(sheet)
-      };
+      strategies = getStrategies(slug, sheet);
     } catch (e) {
-      forms[slug] = {
-        title: FORM_CATALOG[slug].title,
-        subtitle: FORM_CATALOG[slug].subtitle,
-        description: FORM_CATALOG[slug].description,
-        strategies: []
-      };
+      strategies = getStrategies(slug, null);
     }
+    forms[slug] = {
+      title: cat.title,
+      subtitle: cat.subtitle,
+      description: cat.description,
+      strategies: strategies,
+      pideCargo: !!cat.pideCargo,
+      pideRecomendaciones: !!cat.pideRecomendaciones,
+      libreUbicacion: !!cat.libreUbicacion,
+      recomendacionesLabel: cat.recomendacionesLabel || RECOMENDACIONES_LABEL
+    };
   }
 
   return jsonResponse({
@@ -155,10 +244,13 @@ function handleGetConfig() {
 // ── GET /?action=getFormData&form=slug ─────────────────────
 function handleGetFormData(slug) {
   var sheet = getSheet(slug);
+  var meta = getFormMeta(slug);
+  var cat = FORM_CATALOG[slug] || {};
+  var strategies = getStrategies(slug, sheet);
   var data = sheet.getDataRange().getValues();
-  if (data.length < 2) return jsonResponse({ rows: [], strategies: [] });
+  if (data.length < 2) return jsonResponse({ rows: [], strategies: strategies });
 
-  var strategies = leerEstrategiasDeHoja(sheet);
+  var recCol = meta.estStart + strategies.length * 2;
   var rows = [];
 
   for (var i = 1; i < data.length; i++) {
@@ -167,8 +259,8 @@ function handleGetFormData(slug) {
     var aplica = 0, noAplica = 0;
 
     for (var s = 0; s < strategies.length; s++) {
-      var colEst = 3 + s * 2;
-      var colObs = 4 + s * 2;
+      var colEst = meta.estStart + s * 2;
+      var colObs = colEst + 1;
       var estado = String(row[colEst] || "").trim();
       var obs = String(row[colObs] || "").trim();
 
@@ -189,13 +281,18 @@ function handleGetFormData(slug) {
     var semaforoAlmacenado = String(row[2] || "").trim();
     var semaforo = semaforoAlmacenado || calcularSemaforo(aplica, noAplica);
 
-    rows.push({
+    var obj = {
       id: i,
       municipio: String(row[0] || "").trim(),
       institucion: String(row[1] || "").trim(),
       semaforo: semaforo,
       estrategias: estrategias
-    });
+    };
+    if (meta.nombreCol >= 0) obj.nombre = String(row[meta.nombreCol] || "").trim();
+    if (meta.cargoCol >= 0) obj.cargo = String(row[meta.cargoCol] || "").trim();
+    if (cat.pideRecomendaciones) obj.recomendaciones = String(row[recCol] || "").trim();
+
+    rows.push(obj);
   }
 
   return jsonResponse({
@@ -227,17 +324,20 @@ function handleGetDetalle(id, formSlug) {
     var slug = slugs[si];
     try {
       var sheet = getSheet(slug);
+      var meta = getFormMeta(slug);
+      var cat = FORM_CATALOG[slug] || {};
       var data = sheet.getDataRange().getValues();
       if (data.length < 2) continue;
-      var strategies = leerEstrategiasDeHoja(sheet);
+      var strategies = getStrategies(slug, sheet);
+      var recCol = meta.estStart + strategies.length * 2;
 
       for (var i = 1; i < data.length; i++) {
         if (i !== id) continue;
         var row = data[i];
         var est = [];
         for (var s = 0; s < strategies.length; s++) {
-          var colEst = 3 + s * 2;
-          var colObs = 4 + s * 2;
+          var colEst = meta.estStart + s * 2;
+          var colObs = colEst + 1;
           est.push({
             nombre: strategies[s].nombre,
             tipo: strategies[s].tipo,
@@ -245,11 +345,15 @@ function handleGetDetalle(id, formSlug) {
             observaciones: String(row[colObs] || "").trim()
           });
         }
-        return jsonResponse({
+        var detalle = {
           municipio: String(row[0] || "").trim(),
           institucion: String(row[1] || "").trim(),
           estrategias: est
-        });
+        };
+        if (meta.nombreCol >= 0) detalle.nombre = String(row[meta.nombreCol] || "").trim();
+        if (meta.cargoCol >= 0) detalle.cargo = String(row[meta.cargoCol] || "").trim();
+        if (cat.pideRecomendaciones) detalle.recomendaciones = String(row[recCol] || "").trim();
+        return jsonResponse(detalle);
       }
     } catch (e) { /* continue */ }
   }
@@ -262,20 +366,16 @@ function handleSave(data) {
   if (!slug || !SHEET_NAMES[slug]) throw new Error("Formulario inválido");
 
   var sheet = getSheet(slug);
-  var strategies = leerEstrategiasDeHoja(sheet);
+  var meta = getFormMeta(slug);
+  var cat = FORM_CATALOG[slug] || {};
+  var strategies = getStrategies(slug, sheet);
   var municipio = (data.municipio || "").trim();
   var institucion = (data.institucion || "").trim();
 
   // Calcular semáforo
   var aplica = 0, noAplica = 0;
   for (var s = 0; s < strategies.length; s++) {
-    var input = null;
-    for (var j = 0; j < (data.estrategias || []).length; j++) {
-      if (data.estrategias[j].nombre === strategies[s].nombre) {
-        input = data.estrategias[j];
-        break;
-      }
-    }
+    var input = findEstrategia(data.estrategias, strategies[s].nombre);
     if (input && strategies[s].tipo === "aplica") {
       if (input.estado === "Aplica") aplica++;
       if (input.estado === "No aplica") noAplica++;
@@ -283,16 +383,16 @@ function handleSave(data) {
   }
   var semaforo = calcularSemaforo(aplica, noAplica);
 
-  // Construir fila
+  // Construir fila — base
   var row = [municipio, institucion, semaforo];
+
+  // Campos extra (nombre, cargo) según layout
+  if (meta.nombreCol >= 0) row.push((data.nombre || "").trim());
+  if (meta.cargoCol >= 0) row.push((data.cargo || "").trim());
+
+  // Estrategias (estado/valor + observaciones)
   for (s = 0; s < strategies.length; s++) {
-    var match = null;
-    for (j = 0; j < (data.estrategias || []).length; j++) {
-      if (data.estrategias[j].nombre === strategies[s].nombre) {
-        match = data.estrategias[j];
-        break;
-      }
-    }
+    var match = findEstrategia(data.estrategias, strategies[s].nombre);
     if (match && strategies[s].tipo === "numero") {
       row.push(String(match.valor || ""));
     } else if (match) {
@@ -303,8 +403,19 @@ function handleSave(data) {
     row.push(match ? (match.observaciones || "") : "");
   }
 
+  // Recomendaciones al final
+  if (cat.pideRecomendaciones) row.push((data.recomendaciones || "").trim());
+
   sheet.appendRow(row);
   return jsonResponse({ success: true, id: sheet.getLastRow() - 1 });
+}
+
+function findEstrategia(lista, nombre) {
+  lista = lista || [];
+  for (var j = 0; j < lista.length; j++) {
+    if (lista[j].nombre === nombre) return lista[j];
+  }
+  return null;
 }
 
 // ── Router ─────────────────────────────────────────────────

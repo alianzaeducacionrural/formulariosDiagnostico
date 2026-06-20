@@ -7,34 +7,48 @@ async function getConfig() {
   var res = await fetch(GAS_URL + "?action=getConfig");
   var json = await res.json();
   configCache = json.data;
+  if (typeof aplicarFormDefsLocales === "function") {
+    configCache = aplicarFormDefsLocales(configCache);
+  }
   return configCache;
+}
+
+function mostrarLoaderPagina(visible) {
+  var el = document.getElementById("pageLoader");
+  if (el) el.style.display = visible ? "flex" : "none";
 }
 
 // ── Página principal /admin ───────────────────────────────
 async function initAdmin() {
-  var config = await getConfig();
-  var res = await fetch(GAS_URL + "?action=getAdminSummary");
-  var json = await res.json();
-  var summary = json.data;
-  var grid = document.getElementById("admin-grid");
-  if (!grid) return;
+  mostrarLoaderPagina(true);
+  try {
+    var config = await getConfig();
+    var res = await fetch(GAS_URL + "?action=getAdminSummary");
+    var json = await res.json();
+    var summary = json.data;
+    var grid = document.getElementById("admin-grid");
+    if (!grid) return;
+    grid.innerHTML = "";
 
-  for (var slug in summary) {
-    var item = summary[slug];
-    var form = config.forms[slug];
-    var card = document.createElement("a");
-    card.className = "admin-card";
-    card.href = "admin-formulario.html?form=" + slug;
-    card.innerHTML = `
-      <h3 class="admin-card-title">${form ? form.title : slug}</h3>
-      <div class="admin-metrics">
-        <div class="metric">
-          <strong>${item.total}</strong>
-          <small>Respuestas registradas</small>
+    for (var slug in summary) {
+      var item = summary[slug];
+      var form = config.forms[slug];
+      var card = document.createElement("a");
+      card.className = "admin-card";
+      card.href = "admin-formulario.html?form=" + slug;
+      card.innerHTML = `
+        <h3 class="admin-card-title">${form ? (form.subtitle || form.title) : slug}</h3>
+        <div class="admin-metrics">
+          <div class="metric">
+            <strong>${item.total}</strong>
+            <small>Respuestas registradas</small>
+          </div>
         </div>
-      </div>
-    `;
-    grid.appendChild(card);
+      `;
+      grid.appendChild(card);
+    }
+  } finally {
+    mostrarLoaderPagina(false);
   }
 }
 
@@ -45,51 +59,56 @@ async function initFormAdmin() {
   if (!slug) { document.body.innerHTML = "<p>Formulario no especificado</p>"; return; }
   currentFormSlug = slug;
 
-  var config = await getConfig();
-  var formInfo = config.forms[slug];
-  if (!formInfo) { document.body.innerHTML = "<p>Formulario no encontrado</p>"; return; }
+  mostrarLoaderPagina(true);
+  try {
+    var config = await getConfig();
+    var formInfo = config.forms[slug];
+    if (!formInfo) { document.body.innerHTML = "<p>Formulario no encontrado</p>"; return; }
 
-  // Pedir datos
-  var res = await fetch(GAS_URL + "?action=getFormData&form=" + slug);
-  var json = await res.json();
-  var data = json.data;
-  var rows = data.rows || [];
-  var strategies = data.strategies || [];
+    // Pedir datos
+    var res = await fetch(GAS_URL + "?action=getFormData&form=" + slug);
+    var json = await res.json();
+    var data = json.data || {};
+    var rows = data.rows || [];
+    var strategies = data.strategies || [];
 
-  var titulo = formInfo.title;
-  document.getElementById("page-title").textContent = titulo;
-  document.getElementById("admin-title").textContent = titulo;
-  document.getElementById("export-link").href = "#"; // GAS no exporta xlsx directamente
+    var titulo = formInfo.subtitle || formInfo.title;
+    document.getElementById("page-title").textContent = titulo;
+    document.getElementById("admin-title").textContent = titulo;
+    document.getElementById("export-link").href = "#"; // GAS no exporta xlsx directamente
 
-  // Calcular KPIs
-  var total = rows.length;
-  var verdes = rows.filter(function(r) { return r.semaforo === "Verde"; }).length;
-  var amarillos = rows.filter(function(r) { return r.semaforo === "Amarillo"; }).length;
-  var rojos = rows.filter(function(r) { return r.semaforo === "Rojo"; }).length;
-  function pct(n) { return total ? Math.round(n / total * 100) : 0; }
+    // Calcular KPIs
+    var total = rows.length;
+    var verdes = rows.filter(function(r) { return r.semaforo === "Verde"; }).length;
+    var amarillos = rows.filter(function(r) { return r.semaforo === "Amarillo"; }).length;
+    var rojos = rows.filter(function(r) { return r.semaforo === "Rojo"; }).length;
+    function pct(n) { return total ? Math.round(n / total * 100) : 0; }
 
-  document.getElementById("kpi-total").textContent = total;
-  document.getElementById("kpi-verde").textContent = pct(verdes) + "%";
-  document.getElementById("kpi-verde-meta").textContent = verdes + " instituciones";
-  document.getElementById("kpi-amarillo").textContent = pct(amarillos) + "%";
-  document.getElementById("kpi-amarillo-meta").textContent = amarillos + " instituciones";
-  document.getElementById("kpi-rojo").textContent = pct(rojos) + "%";
-  document.getElementById("kpi-rojo-meta").textContent = rojos + " instituciones";
+    document.getElementById("kpi-total").textContent = total;
+    document.getElementById("kpi-verde").textContent = pct(verdes) + "%";
+    document.getElementById("kpi-verde-meta").textContent = verdes + " instituciones";
+    document.getElementById("kpi-amarillo").textContent = pct(amarillos) + "%";
+    document.getElementById("kpi-amarillo-meta").textContent = amarillos + " instituciones";
+    document.getElementById("kpi-rojo").textContent = pct(rojos) + "%";
+    document.getElementById("kpi-rojo-meta").textContent = rojos + " instituciones";
 
-  // Insights
-  renderInsights(total, verdes, amarillos, rojos, rows);
+    // Insights
+    renderInsights(total, verdes, amarillos, rojos, rows);
 
-  // Ranking
-  renderRanking(rows, strategies);
+    // Ranking
+    renderRanking(rows, strategies);
 
-  // Resumen por estrategia
-  renderStrategySummary(rows, strategies);
+    // Resumen por estrategia
+    renderStrategySummary(rows, strategies);
 
-  // Resumen por municipio
-  renderMunicipios(rows);
+    // Resumen por municipio
+    renderMunicipios(rows);
 
-  // Tabla detalle
-  renderDetailTable(rows);
+    // Tabla detalle
+    renderDetailTable(rows);
+  } finally {
+    mostrarLoaderPagina(false);
+  }
 }
 
 function renderInsights(total, verdes, amarillos, rojos, rows) {
@@ -222,12 +241,22 @@ async function verDetalle(id) {
     var json = await res.json();
     if (!json.ok || !json.data) { contenido.innerHTML = "<p>Error cargando detalle.</p>"; return; }
     var d = json.data;
-    var html = '<div class="detalle-header"><div><strong>Municipio:</strong> ' + (d.municipio || "-") + '</div><div><strong>Institución:</strong> ' + (d.institucion || "-") + '</div></div><div class="detalle-estrategias">';
+
+    var headerItems = '<div><strong>Municipio:</strong> ' + (d.municipio || "-") + '</div>' +
+                      '<div><strong>Institución:</strong> ' + (d.institucion || "-") + '</div>';
+    if (d.nombre) headerItems += '<div><strong>Nombre:</strong> ' + d.nombre + '</div>';
+    if (d.cargo) headerItems += '<div><strong>Cargo:</strong> ' + d.cargo + '</div>';
+
+    var html = '<div class="detalle-header">' + headerItems + '</div><div class="detalle-estrategias">';
     (d.estrategias || []).forEach(function(e) {
       var cls = e.estado === "Aplica" ? "verde" : "rojo";
       html += '<div class="detalle-card"><div class="detalle-card-header"><span class="detalle-estrategia">' + e.nombre + '</span><span class="detalle-estado ' + cls + '">' + (e.estado || e.valor || "-") + '</span></div><div class="detalle-observacion">' + (e.observaciones || "Sin observaciones") + '</div></div>';
     });
     html += '</div>';
+
+    if (d.recomendaciones) {
+      html += '<div class="detalle-recomendaciones"><strong>Recomendaciones para la alianza</strong><p>' + d.recomendaciones + '</p></div>';
+    }
     contenido.innerHTML = html;
   } catch (err) {
     contenido.innerHTML = "<p>Error cargando el detalle.</p>";
