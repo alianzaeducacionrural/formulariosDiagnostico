@@ -341,3 +341,65 @@ button:active {
   transform: translateY(-1px);
   box-shadow: 0 14px 34px rgba(40,167,69,0.5);
 }
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+@media (max-width: 600px) {
+  .container {
+    padding: 14px;
+  }
+
+  .card {
+    padding: 20px;
+    border-radius: 12px;
+  }
+
+  h1 {
+    font-size: 1.55rem;
+  }
+
+  h3 {
+    font-size: 1.15rem;
+  }
+
+  .estrategia {
+    padding: 16px;
+  }
+
+  .toggle {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+
+  /* Botón de envío a ancho completo */
+  .form-actions button {
+    width: 100%;
+  }
+
+  .modal-box {
+    width: 94%;
+    padding: 22px;
+  }
+
+  .modal-actions {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .modal-actions button {
+    flex: 1 1 100%;
+  }
+
+  .loader-box {
+    padding: 24px 26px;
+    width: 80%;
+    max-width: 280px;
+  }
+}
+
+@media (max-width: 360px) {
+  .toggle-group {
+    flex-direction: column;
+  }
+}

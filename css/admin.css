@@ -921,12 +921,70 @@ details.accordion {
    RESPONSIVE
 ===================================================== */
 @media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+
+  .card {
+    padding: 20px;
+  }
+
   .admin-grid {
     grid-template-columns: 1fr;
   }
 
   .filtros {
     flex-direction: column;
+  }
+
+  /* Header ejecutivo apilado */
+  .admin-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .admin-home-header h1 {
+    font-size: 1.9rem;
+  }
+
+  /* Tablas con scroll horizontal en pantallas pequeñas */
+  table,
+  .ranking-table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+
+  /* Detalle a una sola columna */
+  .detalle-header {
+    grid-template-columns: 1fr;
+  }
+
+  .modal {
+    padding: 14px;
+  }
+
+  details.accordion summary {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .kpi {
+    padding: 18px 18px;
+  }
+
+  .kpi-value {
+    font-size: 2rem;
+  }
+
+  .loader-box {
+    padding: 24px 26px;
+    width: 80%;
+    max-width: 280px;
   }
 }
 
