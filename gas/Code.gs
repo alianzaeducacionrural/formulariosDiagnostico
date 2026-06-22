@@ -28,6 +28,14 @@ var ALIANZA_ESTRATEGIAS = [
 
 var RECOMENDACIONES_LABEL = "Recomendaciones para la alianza frente a la formación, asesoría y acompañamiento";
 
+// ── Opciones de respuesta para estrategias "aplica" ────────
+var OPCIONES_BINARIAS = ["Aplica", "No aplica"];
+var ALIANZA_OPCIONES = [
+  "Aplica adecuadamente",
+  "Aplica con oportunidad de mejora",
+  "No aplica"
+];
+
 // ── Catálogo de formularios (títulos, descripciones) ───────
 var FORM_CATALOG = {
   escuela_nueva: {
@@ -58,6 +66,7 @@ var FORM_CATALOG = {
     pideCargo: true,
     pideRecomendaciones: true,
     recomendacionesLabel: RECOMENDACIONES_LABEL,
+    aplicaOpciones: ALIANZA_OPCIONES,
     strategies: ALIANZA_ESTRATEGIAS
   }
 };
@@ -101,12 +110,32 @@ var MUNICIPIOS = {
 };
 
 // ── Semáforo ───────────────────────────────────────────────
-function calcularSemaforo(aplica, noAplica) {
-  var total = aplica + noAplica || 1;
-  var pct = (aplica / total) * 100;
+// Puntaje por estado (estrategias tipo "aplica"):
+//   Aplica adecuadamente            -> 1.0
+//   Aplica con oportunidad de mejora -> 0.5
+//   Aplica (binario, compatibilidad) -> 1.0
+//   No aplica                        -> 0.0
+//   (sin responder / otro)           -> null (no cuenta)
+function puntosEstado(estado) {
+  switch (String(estado || "").trim()) {
+    case "Aplica adecuadamente": return 1;
+    case "Aplica con oportunidad de mejora": return 0.5;
+    case "Aplica": return 1;
+    case "No aplica": return 0;
+    default: return null;
+  }
+}
+
+function semaforoDesdePct(pct) {
   if (pct < 50) return "Rojo";
   if (pct < 75) return "Amarillo";
   return "Verde";
+}
+
+// Calcula el semáforo a partir del puntaje acumulado y la cantidad
+// de estrategias "aplica" respondidas.
+function semaforoDesdePuntaje(puntos, cuenta) {
+  return semaforoDesdePct(cuenta ? (puntos / cuenta) * 100 : 0);
 }
 
 // ── Helpers de respuesta ───────────────────────────────────
@@ -231,7 +260,8 @@ function handleGetConfig() {
       pideCargo: !!cat.pideCargo,
       pideRecomendaciones: !!cat.pideRecomendaciones,
       libreUbicacion: !!cat.libreUbicacion,
-      recomendacionesLabel: cat.recomendacionesLabel || RECOMENDACIONES_LABEL
+      recomendacionesLabel: cat.recomendacionesLabel || RECOMENDACIONES_LABEL,
+      aplicaOpciones: cat.aplicaOpciones || OPCIONES_BINARIAS
     };
   }
 
@@ -256,7 +286,7 @@ function handleGetFormData(slug) {
   for (var i = 1; i < data.length; i++) {
     var row = data[i];
     var estrategias = [];
-    var aplica = 0, noAplica = 0;
+    var puntos = 0, cuenta = 0;
 
     for (var s = 0; s < strategies.length; s++) {
       var colEst = meta.estStart + s * 2;
@@ -265,8 +295,8 @@ function handleGetFormData(slug) {
       var obs = String(row[colObs] || "").trim();
 
       if (strategies[s].tipo === "aplica") {
-        if (estado === "Aplica") aplica++;
-        if (estado === "No aplica") noAplica++;
+        var p = puntosEstado(estado);
+        if (p !== null) { puntos += p; cuenta++; }
       }
 
       estrategias.push({
@@ -279,7 +309,7 @@ function handleGetFormData(slug) {
 
     // Usar semáforo almacenado si existe; si no, calcular
     var semaforoAlmacenado = String(row[2] || "").trim();
-    var semaforo = semaforoAlmacenado || calcularSemaforo(aplica, noAplica);
+    var semaforo = semaforoAlmacenado || semaforoDesdePuntaje(puntos, cuenta);
 
     var obj = {
       id: i,
@@ -372,16 +402,16 @@ function handleSave(data) {
   var municipio = (data.municipio || "").trim();
   var institucion = (data.institucion || "").trim();
 
-  // Calcular semáforo
-  var aplica = 0, noAplica = 0;
+  // Calcular semáforo (por puntaje)
+  var puntos = 0, cuenta = 0;
   for (var s = 0; s < strategies.length; s++) {
     var input = findEstrategia(data.estrategias, strategies[s].nombre);
     if (input && strategies[s].tipo === "aplica") {
-      if (input.estado === "Aplica") aplica++;
-      if (input.estado === "No aplica") noAplica++;
+      var p = puntosEstado(input.estado);
+      if (p !== null) { puntos += p; cuenta++; }
     }
   }
-  var semaforo = calcularSemaforo(aplica, noAplica);
+  var semaforo = semaforoDesdePuntaje(puntos, cuenta);
 
   // Construir fila — base
   var row = [municipio, institucion, semaforo];

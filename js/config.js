@@ -17,6 +17,7 @@ var LOCAL_FORM_DEFS = {
     pideCargo: true,
     pideRecomendaciones: true,
     recomendacionesLabel: "Recomendaciones para la alianza frente a la formación, asesoría y acompañamiento",
+    aplicaOpciones: ["Aplica adecuadamente", "Aplica con oportunidad de mejora", "No aplica"],
     strategies: [
       { nombre: "Ambientación de las aulas", tipo: "aplica" },
       { nombre: "Hora de Gestión de Negocios", tipo: "aplica" },
@@ -30,14 +31,27 @@ var LOCAL_FORM_DEFS = {
   }
 };
 
-// Combina las definiciones locales con la config del GAS,
-// sin sobreescribir lo que el GAS ya devuelva.
+// Combina las definiciones locales con la config del GAS.
+// - Si el formulario no existe en la respuesta del GAS, se agrega completo.
+// - Si existe pero le faltan campos (ej. aplicaOpciones porque el GAS aún
+//   no está redesplegado), se completan SOLO los campos ausentes.
+// Lo que el GAS ya devuelve siempre tiene prioridad.
 function aplicarFormDefsLocales(config) {
   if (!config) return config;
   config.forms = config.forms || {};
   config.municipios = config.municipios || {};
   for (var slug in LOCAL_FORM_DEFS) {
-    if (!config.forms[slug]) config.forms[slug] = LOCAL_FORM_DEFS[slug];
+    var def = LOCAL_FORM_DEFS[slug];
+    if (!config.forms[slug]) {
+      config.forms[slug] = def;
+      continue;
+    }
+    var f = config.forms[slug];
+    for (var k in def) {
+      if (f[k] === undefined || f[k] === null || (Array.isArray(f[k]) && f[k].length === 0)) {
+        f[k] = def[k];
+      }
+    }
   }
   return config;
 }

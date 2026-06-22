@@ -18,6 +18,26 @@ function mostrarLoaderPagina(visible) {
   if (el) el.style.display = visible ? "flex" : "none";
 }
 
+// Puntaje por estado (estrategias tipo "aplica"):
+//   Aplica adecuadamente             -> 1.0
+//   Aplica con oportunidad de mejora -> 0.5
+//   Aplica (binario)                 -> 1.0
+//   No aplica                        -> 0.0
+//   (sin responder / otro)           -> null (no cuenta)
+function puntosEstado(estado) {
+  switch (String(estado || "").trim()) {
+    case "Aplica adecuadamente": return 1;
+    case "Aplica con oportunidad de mejora": return 0.5;
+    case "Aplica": return 1;
+    case "No aplica": return 0;
+    default: return null;
+  }
+}
+
+function nivelDesdePct(pct) {
+  return pct < 50 ? "rojo" : pct < 75 ? "amarillo" : "verde";
+}
+
 // ── Página principal /admin ───────────────────────────────
 async function initAdmin() {
   mostrarLoaderPagina(true);
@@ -149,13 +169,14 @@ function renderRanking(rows) {
   if (!tbody) return;
 
   var ranking = rows.map(function(r) {
-    var aplica = 0, noAplica = 0;
+    var puntos = 0, cuenta = 0;
     (r.estrategias || []).forEach(function(e) {
-      if (e.tipo === "aplica" && e.estado === "Aplica") aplica++;
-      if (e.tipo === "aplica" && e.estado === "No aplica") noAplica++;
+      if (e.tipo !== "aplica") return;
+      var p = puntosEstado(e.estado);
+      if (p !== null) { puntos += p; cuenta++; }
     });
-    var pct = (aplica + noAplica) ? Math.round(aplica / (aplica + noAplica) * 100) : 0;
-    return { institucion: r.institucion, municipio: r.municipio, porcentaje: pct, nivel: pct < 50 ? "rojo" : pct < 75 ? "amarillo" : "verde" };
+    var pct = cuenta ? Math.round(puntos / cuenta * 100) : 0;
+    return { institucion: r.institucion, municipio: r.municipio, porcentaje: pct, nivel: nivelDesdePct(pct) };
   }).sort(function(a, b) { return a.porcentaje - b.porcentaje; });
 
   tbody.innerHTML = ranking.slice(0, 10).map(function(r, i) {
@@ -168,18 +189,17 @@ function renderStrategySummary(rows, strategies) {
   if (!container) return;
 
   var resumen = strategies.map(function(s) {
-    var aplica = 0, noAplica = 0;
+    var puntos = 0, cuenta = 0;
     rows.forEach(function(r) {
       (r.estrategias || []).forEach(function(e) {
         if (e.nombre === s.nombre && e.tipo === "aplica") {
-          if (e.estado === "Aplica") aplica++;
-          if (e.estado === "No aplica") noAplica++;
+          var p = puntosEstado(e.estado);
+          if (p !== null) { puntos += p; cuenta++; }
         }
       });
     });
-    var totalE = aplica + noAplica || 1;
-    var pct = Math.round(aplica / totalE * 100);
-    var estado = pct < 50 ? "rojo" : pct < 75 ? "amarillo" : "verde";
+    var pct = cuenta ? Math.round(puntos / cuenta * 100) : 0;
+    var estado = nivelDesdePct(pct);
     return { nombre: s.nombre, porcentaje: pct, estado: estado };
   });
 
@@ -249,7 +269,8 @@ async function verDetalle(id) {
 
     var html = '<div class="detalle-header">' + headerItems + '</div><div class="detalle-estrategias">';
     (d.estrategias || []).forEach(function(e) {
-      var cls = e.estado === "Aplica" ? "verde" : "rojo";
+      var p = puntosEstado(e.estado);
+      var cls = p === null ? "" : (p >= 1 ? "verde" : (p > 0 ? "amarillo" : "rojo"));
       html += '<div class="detalle-card"><div class="detalle-card-header"><span class="detalle-estrategia">' + e.nombre + '</span><span class="detalle-estado ' + cls + '">' + (e.estado || e.valor || "-") + '</span></div><div class="detalle-observacion">' + (e.observaciones || "Sin observaciones") + '</div></div>';
     });
     html += '</div>';

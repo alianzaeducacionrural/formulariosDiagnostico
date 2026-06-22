@@ -113,9 +113,20 @@ function renderUbicacion(form, config) {
   });
 }
 
+// Color e ícono del botón según la opción (verde / amarillo / rojo)
+function estiloOpcion(valor) {
+  var v = String(valor || "").toLowerCase();
+  if (v.indexOf("no aplica") !== -1) return { clase: "toggle-rojo", icono: "✖" };
+  if (v.indexOf("oportunidad") !== -1 || v.indexOf("mejora") !== -1) return { clase: "toggle-amarillo", icono: "◑" };
+  if (v.indexOf("aplica") !== -1) return { clase: "toggle-verde", icono: "✔" };
+  return { clase: "toggle-verde", icono: "" };
+}
+
 function renderEstrategias(form) {
   var container = document.getElementById("estrategias-container");
   container.innerHTML = "";
+  var opciones = (form.aplicaOpciones && form.aplicaOpciones.length) ? form.aplicaOpciones : ["Aplica", "No aplica"];
+
   (form.strategies || []).forEach(function(est, i) {
     var fieldset = document.createElement("fieldset");
     fieldset.className = "estrategia";
@@ -129,22 +140,28 @@ function renderEstrategias(form) {
                   placeholder="Observaciones" required
                   data-nombre="${escapeHtml(est.nombre)}" data-tipo="numero"></textarea>
       `;
-    } else {
-      fieldset.innerHTML = `
-        <div class="estrategia-header">${escapeHtml(est.nombre)}</div>
-        <div class="toggle-group">
-          <input type="radio" id="aplica-${i}" name="estado-${i}" value="Aplica" required
-                 data-nombre="${escapeHtml(est.nombre)}" data-tipo="aplica" class="estr-radio">
-          <label for="aplica-${i}" class="toggle toggle-aplica">✔ Aplica</label>
-          <input type="radio" id="noaplica-${i}" name="estado-${i}" value="No aplica"
-                 data-nombre="${escapeHtml(est.nombre)}" data-tipo="aplica" class="estr-radio">
-          <label for="noaplica-${i}" class="toggle toggle-noaplica">✖ No aplica</label>
-        </div>
-        <textarea name="estrategias[${i}][observaciones]"
-                  placeholder="Observaciones (obligatorio)" required
-                  data-nombre="${escapeHtml(est.nombre)}" data-tipo="aplica" class="estr-obs"></textarea>
-      `;
+      container.appendChild(fieldset);
+      return;
     }
+
+    var grupoClase = opciones.length > 2 ? "toggle-group toggle-group-vertical" : "toggle-group";
+    var botones = opciones.map(function(op, j) {
+      var est_ = estiloOpcion(op);
+      var inputId = "op-" + i + "-" + j;
+      return `
+        <input type="radio" id="${inputId}" name="estado-${i}" value="${escapeHtml(op)}"${j === 0 ? " required" : ""}
+               data-nombre="${escapeHtml(est.nombre)}" data-tipo="aplica" class="estr-radio">
+        <label for="${inputId}" class="toggle ${est_.clase}">${est_.icono} ${escapeHtml(op)}</label>
+      `;
+    }).join("");
+
+    fieldset.innerHTML = `
+      <div class="estrategia-header">${escapeHtml(est.nombre)}</div>
+      <div class="${grupoClase}">${botones}</div>
+      <textarea name="estrategias[${i}][observaciones]"
+                placeholder="Observaciones (obligatorio)" required
+                data-nombre="${escapeHtml(est.nombre)}" data-tipo="aplica" class="estr-obs"></textarea>
+    `;
     container.appendChild(fieldset);
   });
 }

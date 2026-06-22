@@ -178,6 +178,11 @@ fieldset {
   margin-bottom: 14px;
 }
 
+/* Grupo vertical (cuando hay más de 2 opciones) */
+.toggle-group-vertical {
+  flex-direction: column;
+}
+
 .toggle-group input {
   display: none;
 }
@@ -200,16 +205,26 @@ fieldset {
   background: #f8fafc;
 }
 
-/* Aplica seleccionado */
-.toggle-group input:checked + .toggle-aplica {
+/* Aplica seleccionado (verde) */
+.toggle-group input:checked + .toggle-aplica,
+.toggle-group input:checked + .toggle-verde {
   background: #28a745;
   border-color: #28a745;
   color: #fff;
   box-shadow: 0 6px 16px rgba(40,167,69,0.35);
 }
 
-/* No aplica seleccionado */
-.toggle-group input:checked + .toggle-noaplica {
+/* Opción intermedia seleccionada (amarillo) */
+.toggle-group input:checked + .toggle-amarillo {
+  background: #f59e0b;
+  border-color: #f59e0b;
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(245,158,11,0.35);
+}
+
+/* No aplica seleccionado (rojo) */
+.toggle-group input:checked + .toggle-noaplica,
+.toggle-group input:checked + .toggle-rojo {
   background: #dc3545;
   border-color: #dc3545;
   color: #fff;
