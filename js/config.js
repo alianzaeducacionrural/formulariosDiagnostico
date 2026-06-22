@@ -2,7 +2,7 @@
 // 1. Abrir gas/Code.gs en el editor de Google Apps Script
 // 2. Desplegar → Implementación nueva → Web app
 // 3. Copiar la URL aquí
-var GAS_URL = "https://script.google.com/macros/s/AKfycbyE0X5PM8D1KR17wd0wBo8d4H8A1ezhbSPScLWvozOlfpNGJWD12VSSPaeJlL2FKW3K-w/exec";
+var GAS_URL = "https://script.google.com/macros/s/AKfycbw6qgH0Mp_6wqCtq0S8GgpHsiMjk-KhbDFv6-QqtZAEjcvDyLwrdlJGbvlgSriOO4GaRA/exec";
 
 // ── Definiciones locales de respaldo ──────────────────────
 // Permiten renderizar formularios nuevos aunque el GAS aún no

@@ -179,10 +179,14 @@ fieldset {
   flex-wrap: wrap;
 }
 
-/* En PC las opciones van en la misma fila, repartidas por igual */
+/* En PC las opciones van en la misma fila; el texto no se parte */
 .toggle-group .toggle {
-  flex: 1 1 0;
-  min-width: 120px;
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  font-size: 14px;
+  padding-left: 12px;
+  padding-right: 12px;
 }
 
 .toggle-group input {
