@@ -144,7 +144,7 @@ function renderEstrategias(form) {
       return;
     }
 
-    var grupoClase = opciones.length > 2 ? "toggle-group toggle-group-vertical" : "toggle-group";
+    var grupoClase = "toggle-group";
     var botones = opciones.map(function(op, j) {
       var est_ = estiloOpcion(op);
       var inputId = "op-" + i + "-" + j;

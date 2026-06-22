@@ -176,11 +176,13 @@ fieldset {
   display: flex;
   gap: 12px;
   margin-bottom: 14px;
+  flex-wrap: wrap;
 }
 
-/* Grupo vertical (cuando hay más de 2 opciones) */
-.toggle-group-vertical {
-  flex-direction: column;
+/* En PC las opciones van en la misma fila, repartidas por igual */
+.toggle-group .toggle {
+  flex: 1 1 0;
+  min-width: 120px;
 }
 
 .toggle-group input {
@@ -205,30 +207,30 @@ fieldset {
   background: #f8fafc;
 }
 
-/* Aplica seleccionado (verde) */
+/* Aplica seleccionado (verde claro) */
 .toggle-group input:checked + .toggle-aplica,
 .toggle-group input:checked + .toggle-verde {
-  background: #28a745;
-  border-color: #28a745;
-  color: #fff;
-  box-shadow: 0 6px 16px rgba(40,167,69,0.35);
+  background: #dcfce7;
+  border-color: #16a34a;
+  color: #166534;
+  box-shadow: 0 4px 12px rgba(22,163,74,0.18);
 }
 
-/* Opción intermedia seleccionada (amarillo) */
+/* Opción intermedia seleccionada (amarillo claro) */
 .toggle-group input:checked + .toggle-amarillo {
-  background: #f59e0b;
+  background: #fef9c3;
   border-color: #f59e0b;
-  color: #fff;
-  box-shadow: 0 6px 16px rgba(245,158,11,0.35);
+  color: #854d0e;
+  box-shadow: 0 4px 12px rgba(245,158,11,0.18);
 }
 
-/* No aplica seleccionado (rojo) */
+/* No aplica seleccionado (rojo claro) */
 .toggle-group input:checked + .toggle-noaplica,
 .toggle-group input:checked + .toggle-rojo {
-  background: #dc3545;
-  border-color: #dc3545;
-  color: #fff;
-  box-shadow: 0 6px 16px rgba(220,53,69,0.35);
+  background: #fee2e2;
+  border-color: #dc2626;
+  color: #991b1b;
+  box-shadow: 0 4px 12px rgba(220,38,38,0.18);
 }
 
 /* =====================================================
@@ -413,8 +415,14 @@ button:active {
   }
 }
 
-@media (max-width: 360px) {
+@media (max-width: 600px) {
+  /* En móvil las opciones se apilan a ancho completo */
   .toggle-group {
     flex-direction: column;
+  }
+
+  .toggle-group .toggle {
+    flex: 1 1 auto;
+    width: 100%;
   }
 }
